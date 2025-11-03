@@ -1,0 +1,28 @@
+name: Build & Release Doop-Foop
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - uses: dtolnay/rustup-toolchain@v1
+        with:
+          toolchain: stable
+      - run: yarn install
+      - run: node scripts/prepare-binaries.js
+      - run: yarn build && cd src-tauri && cargo build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: doop-foop-${{ matrix.os }}
+          path: src-tauri/target/release/bundle/**
